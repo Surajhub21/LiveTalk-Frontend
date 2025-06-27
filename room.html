@@ -634,8 +634,12 @@
     let stompClient = null;
     let username = null;
     let role = null;
-// Use last part of path as roomId
-const roomId = window.location.pathname.split("/").pop();
+// Use roomId from query parameter (?roomId=...)
+function getRoomIdFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('roomId');
+}
+const roomId = getRoomIdFromQuery();
 
 console.log("[Init] roomId:", roomId);
 
@@ -658,8 +662,8 @@ console.log("[Init] Set room name:", roomId);
 const loggedInUser = JSON.parse(sessionStorage.getItem("loggedInUser") || "{}");
 if (!loggedInUser.username) {
     console.log("[Auth] No logged in user, redirecting...");
-    alert("You must be logged in to continue.");
-    window.location.href = "/signin.html";
+    //alert("You must be logged in to continue.");
+    //window.location.href = "/signin.html";
 } else {
     username = loggedInUser.username;
     role = loggedInUser.role;
@@ -717,7 +721,7 @@ function connectToRoom() {
     updateConnectionStatus('connecting', 'Connecting...');
 
     // ✅ Pass username & roomId in URL query parameters
-    const socket = new SockJS(`/chat?username=${username}&roomId=${roomId}`);
+    const socket = new SockJS(`http://localhost:8083/websocket?username=${username}&roomId=${roomId}`);
     stompClient = Stomp.over(socket);
 
     stompClient.heartbeat.incoming = 60 * 60000;

@@ -746,8 +746,8 @@
             if (response.ok) {
                 const data = await response.json();
                 sessionStorage.setItem('roomDetails', data);
-                // Redirect to chat room
-                window.location.href = `/chat/${data.roomId}`;
+                // Redirect to room.html with roomId as query param
+                window.location.href = `/room.html?roomId=${data.roomId}`;
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to create room');
@@ -802,8 +802,8 @@
             });
 
             if (response.ok) {
-                // Redirect to chat room
-                window.location.href = `/chat/${roomId}`;
+                // Redirect to room.html with roomId as query param
+                window.location.href = `/room.html?roomId=${roomId}`;
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to join room');
