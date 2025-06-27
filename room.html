@@ -834,7 +834,7 @@ async function fetchBannedUsers() {
     const bannedSection = document.querySelector('.banned-users-section');
     bannedSection.style.display = 'block';
     try {
-        const response = await fetch(`http://localhost:8084/moderation/banned-users/${roomId}`);
+        const response = await fetch(`http://localhost:9090/moderation/banned-users/${roomId}`);
         console.log("[BannedUsers] Response:", response)
         if (!response.ok) {
             throw new Error('Failed to fetch banned users');
@@ -862,7 +862,7 @@ async function fetchBannedUsers() {
 async function kickUser(userName) {
     console.log("[Kick] kickUser called for:", userName);
     try {
-        const response = await fetch("http://localhost:8083/chat/kick", {
+        const response = await fetch("http://localhost:9090/chat/kick", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -1127,7 +1127,7 @@ function showTopPriorityMessage(msg) {
 // Fetch and cycle through top priority messages
 async function fetchAndShowTopPriorityMessages() {
     try {
-        const resp = await fetch(`http://localhost:8085/notification/${roomId}/top-liked`);
+        const resp = await fetch(`http://localhost:9090/notification/${roomId}/top-liked`);
         if (!resp.ok) throw new Error('Failed to fetch top priority messages');
         const messages = await resp.json();
         if (!Array.isArray(messages)) return;
