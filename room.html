@@ -521,7 +521,8 @@
             margin-bottom: 10px;
         }
         .super-chat-list {
-            max-height: 160px;
+            max-height: 60vh; /* Increased from 160px to 60vh */
+            min-height: 200px;
             overflow-y: auto;
             background: rgba(255, 245, 230, 0.7);
             border-radius: 8px;
@@ -593,6 +594,102 @@
             margin-left: 2px;
             user-select: none;
         }
+        .super-chat-card {
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: center;
+            animation: fadeInSuperChat 0.4s;
+        }
+        @keyframes fadeInSuperChat {
+            from { opacity: 0; transform: translateY(20px) scale(0.96);}
+            to { opacity: 1; transform: translateY(0) scale(1);}
+        }
+        .super-chat-bank {
+            background: linear-gradient(120deg, #f59e42 60%, #f093fb 100%);
+            border-radius: 18px;
+            box-shadow: 0 4px 24px #f59e4240, 0 1.5px 8px #f093fb33;
+            padding: 18px 28px 14px 28px;
+            min-width: 220px;
+            max-width: 420px; /* Increased from 90vw to 420px */
+            color: #fff;
+            position: relative;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            border: 2.5px solid #fffbe7;
+        }
+        .super-chat-amount {
+            font-size: 1.5em;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .super-chat-currency {
+            font-size: 0.7em;
+            opacity: 0.8;
+        }
+        .super-chat-message {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+        .super-chat-user {
+            font-size: 0.95em;
+            opacity: 0.93;
+            text-align: right;
+            font-style: italic;
+        }
+
+        /* --- Top Priority Messages Feature --- */
+
+        /* Create a container for top priority notifications */
+        #top-priority-container {
+            position: fixed;
+            top: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        /* Add CSS for animation */
+        .top-priority-message {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 16px;
+            box-shadow: 0 6px 32px rgba(240,147,251,0.18);
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin: 8px 0;
+            opacity: 0;
+            transform: translateY(-30px) scale(0.98);
+            animation: topPriorityIn 0.4s cubic-bezier(.4,0,.2,1) forwards;
+            pointer-events: auto;
+            min-width: 260px;
+            max-width: 90vw;
+            text-align: center;
+            word-break: break-word;
+        }
+        @keyframes topPriorityIn {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .top-priority-message.out {
+            animation: topPriorityOut 0.3s cubic-bezier(.4,0,.2,1) forwards;
+        }
+        @keyframes topPriorityOut {
+            to {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.98);
+            }
+        }
     </style>
 </head>
 <body>
@@ -653,6 +750,10 @@
         </div>
         <div class="window-tab-content">
             <div class="super-chat-list" id="super-chat-list"></div>
+            <!-- Add Super Chat Button -->
+            <div style="margin-top:auto; padding: 12px 0 0 0; display:flex; justify-content:center;">
+                <button id="superChatBtn" style="background:linear-gradient(135deg,#f59e42,#f093fb);color:#fff;font-weight:600;border:none;padding:12px 28px;border-radius:10px;cursor:pointer;font-size:1.1em;box-shadow:0 2px 8px #f59e4288;">Send Super Chat</button>
+            </div>
         </div>
     </div>
 </div>
@@ -772,6 +873,12 @@
             stompClient.subscribe(`/topic/${roomId}.users`, onUserListUpdated);
             stompClient.subscribe(`/topic/${roomId}.like`, onLikeUpdated);
 
+            // Subscribe to the room's superchat topic
+            stompClient.subscribe(`/topic/${roomId}.superchat`, (message) => {
+                const chatMessage = JSON.parse(message.body);
+                displaySuperChat(chatMessage);
+            });
+
             stompClient.send(`/app/chat/${roomId}/addUser`, {}, JSON.stringify({
                 sender: username,
                 type: "JOIN"
@@ -787,6 +894,25 @@
             alert("Room Closed! You will redirect to home page...");
             window.location.href = '/home.html';
         });
+    }
+
+    // Display a super chat in the super chat list
+    function displaySuperChat(superChat) {
+        const superChatList = document.getElementById('super-chat-list');
+        if (!superChatList) return;
+
+        console.log(superChat);
+        // Create a super chat card
+        const card = document.createElement('div');
+        card.className = 'super-chat-card';
+        card.innerHTML = `
+            <div class="super-chat-bank">
+                <div class="super-chat-amount">₹${superChat.amount} <span class="super-chat-currency">${superChat.currency || "INR"}</span></div>
+                <div class="super-chat-message">${escapeHtml(superChat.message)}</div>
+                <div class="super-chat-user">— ${superChat.name || "Anonymous"}</div>
+            </div>
+        `;
+        superChatList.prepend(card);
     }
 
     // Handle incoming chat messages
@@ -1080,6 +1206,134 @@
             const activeTab = document.querySelector('.window-tab.active');
             bringToFront(activeTab ? activeTab.id : 'mainChatTab');
         }
+    });
+
+    // Super Chat Button Logic
+    const superChatBtn = document.getElementById('superChatBtn');
+    if (superChatBtn) {
+        superChatBtn.addEventListener('click', async function() {
+            // Prompt for amount
+            let amount = prompt("Enter Super Chat amount (in INR):");
+            if (!amount) return;
+            amount = amount.trim();
+            if (!/^\d+$/.test(amount) || parseInt(amount) <= 0) {
+                alert("Please enter a valid positive amount.");
+                return;
+            }
+            // Prompt for message
+            let message = prompt("Enter your Super Chat message:");
+            if (!message) return;
+            message = message.trim();
+            if (!message) {
+                alert("Message cannot be empty.");
+                return;
+            }
+            // Prepare request data
+            const reqData = {
+                amount: parseInt(amount),
+                name: username,
+                roomId: roomId,
+                message: message,
+                currency: "INR"
+            };
+            // POST to payment API
+            try {
+                const resp = await fetch("http://localhost:9090/payment", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(reqData)
+                });
+                if (!resp.ok) throw new Error("Payment request failed");
+                const data = await resp.json();
+                if (data.status === "SUCCESS" && data.sessionUrl) {
+                    if (confirm("Do you want to proceed to payment now?")) {
+                        const win = window.open(data.sessionUrl, "_blank");
+                        if (win) win.focus();
+                    }
+                } else {
+                    alert("Payment failed: " + (data.message || "Unknown error"));
+                }
+            } catch (err) {
+                alert("Payment error: " + err.message);
+            }
+        });
+    }
+
+    // --- Top Priority Messages Feature ---
+
+    // Create a container for top priority notifications if not already present
+    let topPriorityContainer = document.getElementById('top-priority-container');
+    if (!topPriorityContainer) {
+        topPriorityContainer = document.createElement('div');
+        topPriorityContainer.id = 'top-priority-container';
+        topPriorityContainer.style.cssText = `
+            position: fixed;
+            top: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+        `;
+        document.body.appendChild(topPriorityContainer);
+    }
+
+    // Show a single top priority message
+    function showTopPriorityMessage(msg) {
+        const el = document.createElement('div');
+        el.className = 'top-priority-message';
+        // Compose: username (total like) : Message
+        let sender = msg.sender ? escapeHtml(msg.sender) : '';
+        let content = msg.content ? escapeHtml(msg.content) : '';
+        let likeCount = typeof msg.likeCount === "number" ? msg.likeCount : 0;
+        el.innerHTML = `
+            <span style="font-weight:bold;">${sender}</span>
+            <span style="opacity:0.8;"> (👍 ${likeCount})</span>
+            <span style="font-weight:500;"> : </span>
+            <span>${content}</span>
+        `;
+        topPriorityContainer.appendChild(el);
+        setTimeout(() => {
+            el.classList.add('out');
+            setTimeout(() => {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 300);
+        }, 2800);
+
+        console.log('[TopPriority] Showing message:', msg);
+    }
+
+    // Fetch and cycle through top priority messages
+    async function fetchAndShowTopPriorityMessages() {
+        try {
+            const resp = await fetch(`http://localhost:9090/notification/${roomId}/top-liked`);
+            if (!resp.ok) throw new Error('Failed to fetch top priority messages');
+            const messages = await resp.json();
+            if (!Array.isArray(messages)) return;
+
+            console.log('[TopPriority] Fetched messages:', messages);
+            // Show each message for 5 seconds, one after another
+            for (let i = 0; i < messages.length; ++i) {
+                showTopPriorityMessage(messages[i]);
+                // Wait 5 seconds before showing next
+                // eslint-disable-next-line no-await-in-loop
+                await new Promise(res => setTimeout(res, 5000));
+            }
+        } catch (err) {
+            // Optionally log error, but do not spam UI
+            console.error('[TopPriority] Error:', err);
+        } finally {
+            // Schedule next fetch after 60 seconds total
+            setTimeout(fetchAndShowTopPriorityMessages, 60000);
+        }
+    }
+
+    // Start the top priority message loop after DOM ready
+    window.addEventListener('DOMContentLoaded', () => {
+        // ...existing code...
+        setTimeout(fetchAndShowTopPriorityMessages, 1000);
     });
 </script>
 </body>
