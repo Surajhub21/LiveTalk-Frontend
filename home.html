@@ -491,6 +491,322 @@
         #logout-btn:hover {
           background: #d62c2c;
         }
+
+        /* ===== MOBILE RESPONSIVENESS ===== */
+        /* Tablet: 481px – 768px */
+        @media (max-width: 768px) {
+            header {
+                padding: 0.75rem 1rem;
+            }
+
+            nav {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .logo {
+                font-size: 1.4rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .user-greeting {
+                font-size: 1rem;
+                margin-bottom: 8px;
+            }
+
+            .user-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1.2rem;
+            }
+
+            main {
+                padding: 1.5rem;
+            }
+
+            .hero-section {
+                margin-bottom: 2rem;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .main-container {
+                padding: 2rem 1rem;
+                max-width: 100%;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .btn {
+                padding: 0.875rem 1.5rem;
+                font-size: 1rem;
+            }
+
+            .form-container {
+                max-width: 100%;
+                padding: 1.5rem 1rem;
+            }
+
+            .features {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+                margin-top: 2rem;
+            }
+
+            footer {
+                padding: 1.5rem;
+            }
+
+            .footer-links {
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .profile-dropdown {
+                width: 200px;
+                top: 60px;
+                right: 10px;
+            }
+        }
+
+        /* Mobile: max-width 480px */
+        @media (max-width: 480px) {
+            header {
+                padding: 0.5rem 0.75rem;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 0.25rem;
+                align-items: flex-start;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .nav-links {
+                gap: 0.75rem;
+                font-size: 0.8rem;
+                flex-wrap: wrap;
+            }
+
+            .nav-links li {
+                display: inline;
+            }
+
+            .user-greeting {
+                font-size: 0.9rem;
+                margin-bottom: 0.5rem;
+                width: 100%;
+                text-align: left;
+                order: -1;
+            }
+
+            .user-icon {
+                width: 30px;
+                height: 30px;
+                font-size: 1rem;
+                top: 55px;
+                right: 10px;
+            }
+
+            main {
+                min-height: auto;
+                padding: 1rem;
+            }
+
+            .hero-section {
+                margin-bottom: 1.5rem;
+                text-align: center;
+            }
+
+            .hero-title {
+                font-size: 1.75rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.95rem;
+                margin-bottom: 1rem;
+            }
+
+            .main-container {
+                padding: 1.25rem;
+                max-width: 100%;
+                min-height: auto;
+                width: 100vw;
+                left: -0.5rem;
+                border-radius: 12px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.95rem;
+                flex: 1;
+                min-width: 100%;
+            }
+
+            .form-container {
+                max-width: 100%;
+                padding: 1.25rem 1rem;
+                margin: 1rem auto;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+            }
+
+            .form-group input,
+            .form-group textarea {
+                padding: 0.7rem;
+                font-size: 16px; /* prevents zoom on iOS */
+            }
+
+            .submit-btn {
+                padding: 0.875rem;
+                font-size: 1rem;
+            }
+
+            .back-btn {
+                left: 0.75rem;
+                top: 0.75rem;
+                font-size: 1rem;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                margin-top: 1.5rem;
+                padding: 0 0.5rem;
+            }
+
+            .feature-card {
+                padding: 1.5rem 1rem;
+            }
+
+            .feature-icon {
+                font-size: 2rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .feature-title {
+                font-size: 1rem;
+                margin-bottom: 0.4rem;
+            }
+
+            .feature-description {
+                font-size: 0.85rem;
+            }
+
+            footer {
+                padding: 1rem 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .footer-links {
+                gap: 0.75rem;
+                flex-direction: column;
+            }
+
+            .footer-links a {
+                display: inline;
+                margin-right: 0.5rem;
+            }
+
+            .credit {
+                margin-top: 0.75rem;
+                font-size: 0.8rem;
+            }
+
+            .profile-dropdown {
+                width: 160px;
+                top: 50px;
+                right: 5px;
+                font-size: 0.9rem;
+            }
+
+            .profile-username {
+                font-size: 1.1rem;
+                margin-bottom: 3px;
+            }
+
+            .profile-email {
+                font-size: 0.9rem;
+            }
+
+            #profile-btn,
+            #logout-btn {
+                padding: 0.7rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Small Mobile: max-width 360px */
+        @media (max-width: 360px) {
+            .logo {
+                font-size: 1rem;
+            }
+
+            .nav-links {
+                gap: 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .hero-title {
+                font-size: 1.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.9rem;
+            }
+
+            .btn {
+                font-size: 0.9rem;
+                padding: 0.65rem 0.8rem;
+            }
+
+            .form-container {
+                padding: 1rem 0.75rem;
+            }
+
+            .features {
+                gap: 0.75rem;
+                margin-top: 1rem;
+            }
+
+            .feature-card {
+                padding: 1.25rem 0.75rem;
+            }
+
+            .feature-icon {
+                font-size: 1.75rem;
+            }
+
+            footer {
+                padding: 0.75rem;
+            }
+        }
     </style>
 </head>
 <body>
