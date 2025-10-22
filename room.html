@@ -505,11 +505,39 @@
         .banned-user-item {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 8px 12px;
             background: rgba(220, 38, 38, 0.1);
             border-radius: 8px;
             color: #dc2626;
             font-size: 0.9rem;
+        }
+
+        .unban-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 8px;
+        }
+
+        .unban-btn:hover {
+            background: #059669;
+            transform: scale(1.05);
+        }
+
+        .unban-btn:active {
+            transform: scale(0.95);
+        }
+
+        .unban-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
         /* Super Chat Styles */
         .super-chat-section {
@@ -1542,7 +1570,24 @@
             bannedUsers.forEach(user => {
                 const userElement = document.createElement('div');
                 userElement.className = 'banned-user-item';
-                userElement.innerHTML = `<span>${user}</span>`;
+                
+                const userSpan = document.createElement('span');
+                userSpan.textContent = user;
+                userElement.appendChild(userSpan);
+
+                // Add unban button for creator only
+                if (isCreator) {
+                    const unbanBtn = document.createElement('button');
+                    unbanBtn.className = 'unban-btn';
+                    unbanBtn.textContent = 'Unban';
+                    unbanBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        if (!confirm(`Unban ${user}?`)) return;
+                        unbanUser(user);
+                    };
+                    userElement.appendChild(unbanBtn);
+                }
+
                 if (bannedUsersList) bannedUsersList.appendChild(userElement);
             });
         } catch (error) {
@@ -1564,6 +1609,26 @@
                 })
             });
             if (!response.ok) throw new Error("Failed to kick user");
+            await fetchBannedUsers();
+        } catch (error) {
+            // ignore
+        }
+    }
+
+    // Unban user function (creator only)
+    async function unbanUser(userName) {
+        try {
+            const response = await fetch("http://localhost:9090/moderation/unban", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    roomId: roomId,
+                    username: userName
+                })
+            });
+            if (!response.ok) throw new Error("Failed to unban user");
             await fetchBannedUsers();
         } catch (error) {
             // ignore
