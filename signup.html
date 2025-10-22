@@ -275,20 +275,6 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <select id="role" required>
-                <option value="" disabled selected>Select your role</option>
-                <option value="VIEWER">Viewer</option>
-                <option value="CREATOR">Creator</option>
-                <option value="ADMIN">Admin</option>
-            </select>
-            <div class="role-info">
-                <strong>Viewer:</strong> Can read and participate in chats<br>
-                <strong>Creator:</strong> Can create and manage chat rooms<br>
-                <strong>Admin:</strong> Full system access and moderation
-            </div>
-        </div>
-
         <button type="submit" class="btn" id="submitBtn">
             Create Account
         </button>
@@ -392,10 +378,9 @@
         const username = document.getElementById('username').value.trim();
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
-        const role = document.getElementById('role').value;
 
         // Validation
-        if (!username || !email || !password || !role) {
+        if (!username || !email || !password) {
             showMessage('Please fill in all fields', 'error');
             return;
         }
@@ -426,15 +411,14 @@
                 body: JSON.stringify({
                     username: username,
                     email: email,
-                    password: password,
-                    role: role
+                    password: password
                 })
             });
 
             const data = await response.json();
             setLoading(false);
 
-            if (response.status === 201) {
+            if (response.status === 200) {
                 showMessage('Account created successfully! Redirecting to sign in...', 'success');
 
                 // Reset form

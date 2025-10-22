@@ -771,12 +771,32 @@
     let stompClient = null;
     let username = null;
     let role = null;
+    let isCreator = false; // determined from room metadata
     // Use roomId from query parameter (?roomId=...)
     function getRoomIdFromQuery() {
         const params = new URLSearchParams(window.location.search);
         return params.get('roomId');
     }
     const roomId = getRoomIdFromQuery();
+
+    // Fetch room metadata (creatorName etc.) from backend so we can determine creator privileges
+    async function fetchRoomDetails() {
+        if (!roomId) return;
+        try {
+            const resp = await fetch(`http://localhost:9090/rooms/${roomId}`);
+            if (!resp.ok) throw new Error('Failed to fetch room details');
+            const data = await resp.json();
+            if (roomName) roomName.textContent = data.roomName || roomId;
+            if (roomDesc) roomDesc.textContent = data.roomDescription || '';
+            // mark creator based on username match
+        // determine creator based on username match
+        isCreator = !!(username && data.creatorName && username === data.creatorName);
+        // update super chat button state if present
+        updateSuperChatBtnState();
+        } catch (err) {
+            console.warn('[Room] fetchRoomDetails error:', err);
+        }
+    }
 
     // UI elements
     const chatMessages = document.getElementById("chat-messages");
@@ -804,7 +824,12 @@
     } else {
         username = loggedInUser.username;
         role = loggedInUser.role;
-        connectToRoom();
+        // determine creator based on room metadata, then connect
+            // determine creator based on room metadata, then connect
+            fetchRoomDetails().finally(() => {
+                updateSuperChatBtnState();
+                connectToRoom();
+            });
     }
 
     // Connection status logic
@@ -939,8 +964,8 @@
                     <div class="user-name">${displayName}</div>
                     <div class="user-status"></div>
                 `;
-                // Only show menu if creator and not self
-                if (role === 'CREATOR' && user !== username) {
+                // Only show menu if creator (determined from room metadata) and not self
+                if (isCreator && user !== username) {
                     const menuSpan = document.createElement('span');
                     menuSpan.className = 'user-menu';
                     menuSpan.innerHTML = '&#8942;';
@@ -1208,54 +1233,138 @@
         }
     });
 
-    // Super Chat Button Logic
+    // Super Chat Button Logic - use temporary inline form instead of prompt()
     const superChatBtn = document.getElementById('superChatBtn');
-    if (superChatBtn) {
-        superChatBtn.addEventListener('click', async function() {
-            // Prompt for amount
-            let amount = prompt("Enter Super Chat amount (in INR):");
-            if (!amount) return;
-            amount = amount.trim();
-            if (!/^\d+$/.test(amount) || parseInt(amount) <= 0) {
-                alert("Please enter a valid positive amount.");
+    function updateSuperChatBtnState() {
+        const btn = document.getElementById('superChatBtn');
+        if (!btn) return;
+        if (isCreator) {
+            // disable and dim the button for creators
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.title = "Room creator cannot send Super Chats";
+            return;
+        }
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.title = '';
+    }
+    function createSuperChatForm() {
+        // If form already exists, don't create another
+        if (document.getElementById('super-chat-form')) return;
+
+        const container = document.createElement('div');
+        container.id = 'super-chat-form';
+        container.style.cssText = `
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: white;
+            padding: 14px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            z-index: 10002;
+            width: 320px;
+            max-width: calc(100% - 48px);
+            font-family: inherit;
+        `;
+
+        container.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <strong style="font-size:1rem;color:#111">Send Super Chat</strong>
+                <button id="super-chat-cancel" style="background:none;border:none;font-size:1.1rem;cursor:pointer;">✕</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <input id="super-amount" type="number" min="1" placeholder="Amount (INR)" style="padding:10px;border-radius:8px;border:1px solid #e5e7eb; font-size:0.95rem;" />
+                <textarea id="super-message" rows="3" placeholder="Message" maxlength="200" style="padding:10px;border-radius:8px;border:1px solid #e5e7eb; font-size:0.95rem; resize:vertical;"></textarea>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button id="super-chat-submit" style="background:linear-gradient(135deg,#f59e42,#f093fb);color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;">Pay & Send</button>
+                    <button id="super-chat-cancel-2" style="background:#f3f4f6;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;">Cancel</button>
+                </div>
+                <div id="super-chat-error" style="color:#dc2626;font-size:0.85rem;display:none;margin-top:6px;"></div>
+            </div>
+        `;
+
+        document.body.appendChild(container);
+
+        // Wire up buttons
+        const cancelButtons = container.querySelectorAll('#super-chat-cancel, #super-chat-cancel-2');
+        cancelButtons.forEach(btn => btn.addEventListener('click', () => {
+            removeSuperChatForm();
+        }));
+
+        const submitBtn = container.querySelector('#super-chat-submit');
+        submitBtn.addEventListener('click', async function() {
+            const amtEl = document.getElementById('super-amount');
+            const msgEl = document.getElementById('super-message');
+            const errEl = document.getElementById('super-chat-error');
+
+            const amountVal = amtEl.value ? String(amtEl.value).trim() : '';
+            const messageVal = msgEl.value ? msgEl.value.trim() : '';
+            errEl.style.display = 'none';
+
+            if (!/^[0-9]+$/.test(amountVal) || parseInt(amountVal) <= 0) {
+                errEl.textContent = 'Please enter a valid positive amount.';
+                errEl.style.display = 'block';
                 return;
             }
-            // Prompt for message
-            let message = prompt("Enter your Super Chat message:");
-            if (!message) return;
-            message = message.trim();
-            if (!message) {
-                alert("Message cannot be empty.");
+            if (!messageVal) {
+                errEl.textContent = 'Message cannot be empty.';
+                errEl.style.display = 'block';
                 return;
             }
-            // Prepare request data
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+
             const reqData = {
-                amount: parseInt(amount),
+                amount: parseInt(amountVal, 10),
                 name: username,
                 roomId: roomId,
-                message: message,
-                currency: "INR"
+                message: messageVal,
+                currency: 'INR'
             };
-            // POST to payment API
+
             try {
-                const resp = await fetch("http://localhost:9090/payment", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
+                const resp = await fetch('http://localhost:9090/payment', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(reqData)
                 });
-                if (!resp.ok) throw new Error("Payment request failed");
+                if (!resp.ok) throw new Error('Payment request failed');
                 const data = await resp.json();
-                if (data.status === "SUCCESS" && data.sessionUrl) {
-                    if (confirm("Do you want to proceed to payment now?")) {
-                        const win = window.open(data.sessionUrl, "_blank");
-                        if (win) win.focus();
-                    }
+                if (data.status === 'SUCCESS' && data.sessionUrl) {
+                    // Open payment in new tab/window
+                    const win = window.open(data.sessionUrl, '_blank');
+                    if (win) win.focus();
+                    // Optionally keep form until user confirms; for now remove it immediately
+                    removeSuperChatForm();
                 } else {
-                    alert("Payment failed: " + (data.message || "Unknown error"));
+                    throw new Error(data.message || 'Unknown error');
                 }
             } catch (err) {
-                alert("Payment error: " + err.message);
+                errEl.textContent = 'Payment error: ' + (err.message || err.toString());
+                errEl.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Pay & Send';
             }
+        });
+    }
+
+    function removeSuperChatForm() {
+        const f = document.getElementById('super-chat-form');
+        if (f && f.parentNode) f.parentNode.removeChild(f);
+    }
+
+    if (superChatBtn) {
+        superChatBtn.addEventListener('click', function() {
+            if (isCreator) {
+                // creators should not be able to send super chats
+                alert('Room creator cannot send Super Chats.');
+                return;
+            }
+            createSuperChatForm();
         });
     }
 
