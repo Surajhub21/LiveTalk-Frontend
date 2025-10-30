@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LiveChatX - Connect Instantly</title>
+    <script src="/config.js"></script>
     <style>
         * {
             margin: 0;
@@ -947,7 +948,6 @@
 <script>
     // Global variables
     let currentUser = null;
-    const API_BASE_URL = 'http://localhost:9090';
 
     // Initialize the app
     document.addEventListener('DOMContentLoaded', function() {
@@ -1047,7 +1047,7 @@
 
         try {
             console.log(roomName+ " "+ roomDescription + " " + user);
-            const response = await fetch(`${API_BASE_URL}/rooms`, {
+            const response = await fetch(`${window.ENV.API_URL}rooms`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1106,7 +1106,7 @@
         loading.style.display = 'inline-block';
 
         try {
-            const response = await fetch(`${API_BASE_URL}/rooms/join`, {
+            const response = await fetch(`${window.ENV.API_URL}rooms/join`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

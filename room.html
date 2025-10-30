@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Dashboard</title>
+    <script src="/config.js"></script>
     <style>
         * {
             margin: 0;
@@ -1336,7 +1337,7 @@
     async function fetchRoomDetails() {
         if (!roomId) return;
         try {
-            const resp = await fetch(`http://localhost:9090/rooms/${roomId}`);
+            const resp = await fetch(`${window.ENV.API_URL}rooms/${roomId}`);
             if (!resp.ok) throw new Error('Failed to fetch room details');
             const data = await resp.json();
             if (roomName) roomName.textContent = data.roomName || roomId;
@@ -1439,7 +1440,7 @@
     // Connect to WebSocket and subscribe
     function connectToRoom() {
         updateConnectionStatus('connecting', 'Connecting...');
-        const socket = new SockJS(`http://localhost:8083/websocket?username=${username}&roomId=${roomId}`);
+        const socket = new SockJS(`${window.ENV.WS_URL}?username=${username}&roomId=${roomId}`);
         stompClient = Stomp.over(socket);
 
         stompClient.heartbeat.incoming = 60 * 60000;
@@ -1562,7 +1563,7 @@
         const bannedSection = document.querySelector('.banned-users-section');
         if (bannedSection) bannedSection.style.display = 'block';
         try {
-            const response = await fetch(`http://localhost:9090/moderation/banned-users/${roomId}`);
+            const response = await fetch(`${window.ENV.API_URL}moderation/banned-users/${roomId}`);
             if (!response.ok) throw new Error('Failed to fetch banned users');
             const bannedUsers = await response.json();
             const bannedUsersList = document.getElementById('banned-users-list');
@@ -1598,7 +1599,7 @@
     // Update kickUser function
     async function kickUser(userName) {
         try {
-            const response = await fetch("http://localhost:9090/chat/kick", {
+            const response = await fetch(`${window.ENV.API_URL}chat/kick`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -1618,7 +1619,7 @@
     // Unban user function (creator only)
     async function unbanUser(userName) {
         try {
-            const response = await fetch("http://localhost:9090/moderation/unban", {
+            const response = await fetch(`${window.ENV.API_URL}moderation/unban`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json"
@@ -1916,7 +1917,7 @@
             };
 
             try {
-                const resp = await fetch('http://localhost:9090/payment', {
+                const resp = await fetch(`${window.ENV.API_URL}payment`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(reqData)
@@ -2007,7 +2008,7 @@
     // Fetch and cycle through top priority messages
     async function fetchAndShowTopPriorityMessages() {
         try {
-            const resp = await fetch(`http://localhost:9090/notification/${roomId}/top-liked`);
+            const resp = await fetch(`${window.ENV.API_URL}notification/${roomId}/top-liked`);
             if (!resp.ok) throw new Error('Failed to fetch top priority messages');
             const messages = await resp.json();
             if (!Array.isArray(messages)) return;
